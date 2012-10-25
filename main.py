@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+# -*- coding: utf-8 -*-
 # Copyright 2007 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +16,18 @@
 #
 import webapp2
 import urllib2
+import urllib
 from google.appengine.api import urlfetch
 
 class MainHandler(webapp2.RequestHandler):
 	def get(self, method):
-		if method in ["Browse", "Push", "Config","Account", "Describe", "Search", "Report", "Preset", "Tune", R]:
-			url = "http://opml.radiotime.com/" + method + ".ashx?"
+		if method in ["Browse", "Push", "Config","Account", "Describe", "Search", "Report", "Preset", "Tune", "Recommend"]:
+			url = u"http://opml.radiotime.com/" + method + ".ashx?"
 			get = {}
+
 			for i in self.request.GET.items():
-				get[i[0]] = i[1]
-					
+				get[i[0]] = i[1].encode("utf-8")
+
 			if method != "Tune" or (len(self.request.get("c")) > 0 and method == "Tune"):
 				self.response.headers['Content-Type'] = 'application/json'
 			else:
@@ -34,15 +36,15 @@ class MainHandler(webapp2.RequestHandler):
 					del get["render"]
 				except KeyError, e:
 					pass
+			get = urllib.urlencode(get)
 
-			for i in get.keys():
-				url = url + i + "=" + get[i] + "&"
-
+			url = url + get
+			print url
+			
 			result = urlfetch.fetch(url)
 			if result.status_code == 200:
 				ret = result.content.replace("opml.radiotime.com", self.request.headers["Host"])
 				self.response.write(ret)
-
 
 		else:
 			self.response.write('error')
